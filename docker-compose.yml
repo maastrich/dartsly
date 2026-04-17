@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: dartsly
+      POSTGRES_PASSWORD: dartsly
+      POSTGRES_DB: dartsly
+    ports:
+      - "5432:5432"
+    volumes:
+      - dartsly-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dartsly -d dartsly"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+
+volumes:
+  dartsly-pg-data:

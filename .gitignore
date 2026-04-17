@@ -17,6 +17,12 @@
 /.next/
 /out/
 
+# serwist (generated service worker)
+/public/sw.js
+/public/sw.js.map
+/public/swe-worker-*.js
+/public/swe-worker-*.js.map
+
 # production
 /build
 
@@ -39,3 +45,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# agent tooling (local-only)
+/.agents/
+/.claude/
+/skills-lock.json
