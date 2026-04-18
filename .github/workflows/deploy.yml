@@ -19,14 +19,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: voidzero-dev/setup-vp@v1
         with:
-          version: 10
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
+          node-version: "22"
+          cache: true
       - run: pnpm build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/

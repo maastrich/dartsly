@@ -1,4 +1,3 @@
-
 import { useMemo, useState, useTransition } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
@@ -12,12 +11,7 @@ function normalizeConfig(raw: Partial<CricketConfig> | null | undefined): Cricke
     pointsCap: raw?.pointsCap ?? true,
   };
 }
-import {
-  finishGame,
-  recordThrow,
-  endVisitEarly,
-  undoLastThrow,
-} from "@/lib/game-actions";
+import { finishGame, recordThrow, endVisitEarly, undoLastThrow } from "@/lib/game-actions";
 
 type Participant = { id: string; playerId: string; position: number; name: string };
 type Multiplier = 1 | 2 | 3;
@@ -29,14 +23,14 @@ type PerThrowData = {
   endsVisit?: boolean;
 };
 
-const TARGETS: CricketTarget[] = ["20", "19", "18", "17", "16", "15", "25"];
+const TARGETS: CricketTarget[] = ["15", "16", "17", "18", "19", "20", "25"];
 
 function targetValue(t: CricketTarget) {
   return t === "25" ? 25 : Number(t);
 }
 
 function targetLabel(t: CricketTarget) {
-  return t === "25" ? "Bull" : t;
+  return t === "25" ? "BULL" : t;
 }
 
 function haptic(ms = 8) {
@@ -130,7 +124,6 @@ export function CricketBoard({
         toast.success(`${winner?.name ?? "Player"} wins!`);
         haptic(40);
       }
-
     });
   }
 
@@ -144,7 +137,6 @@ export function CricketBoard({
         eventId: activeVisit.lastEventId,
       });
       if (res?.error) toast.error(res.error);
-
     });
   }
 
@@ -154,14 +146,11 @@ export function CricketBoard({
     start(async () => {
       const res = await undoLastThrow(game.id);
       if (res?.error) toast.error(res.error);
-
     });
   }
 
-  const ordered = splitLayout(participants);
-
   return (
-    <div className="h-full flex flex-col field-grid overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="flex items-center justify-between px-3 pt-2 pb-1 shrink-0">
         <Link
           to="/"
@@ -186,13 +175,13 @@ export function CricketBoard({
         <div className="w-8" />
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-1">
+      <div className="flex-1 min-h-0 overflow-y-auto px-2 pb-1 flex">
         <CricketGrid
-          left={ordered.left}
-          right={ordered.right}
+          participants={participants}
           state={state}
           currentId={isFinished ? state.winner?.id : currentParticipant.id}
           winnerId={isFinished ? game.winnerParticipantId : null}
+          visitThrows={isFinished ? [] : visitThrows}
         />
       </div>
 
@@ -226,176 +215,263 @@ export function CricketBoard({
 /* ─── Grid ───────────────────────────────────────────────────────────── */
 
 function CricketGrid({
-  left,
-  right,
+  participants,
   state,
   currentId,
   winnerId,
+  visitThrows,
 }: {
-  left: Participant[];
-  right: Participant[];
+  participants: Participant[];
   state: ReturnType<typeof deriveState>;
   currentId: string | null | undefined;
   winnerId: string | null | undefined;
+  visitThrows: { value: number; multiplier: Multiplier }[];
 }) {
-  const cols = [...left.map((p) => ({ p })), null, ...right.map((p) => ({ p }))];
-  const gridTemplate = cols
-    .map((c) => (c === null ? "minmax(3.5rem,auto)" : "minmax(0,1fr)"))
-    .join(" ");
+  const gridTemplate = `minmax(6rem,auto) repeat(${TARGETS.length},minmax(0,1fr)) minmax(4.5rem,auto)`;
+  const gridRows = `auto repeat(${participants.length},minmax(0,1fr))`;
+  const allClosedFor = (t: CricketTarget) =>
+    participants.every((p) => (state.marks[p.id]?.[t] ?? 0) >= 3);
 
   return (
-    <div className="rounded-xl overflow-hidden border border-border/60 bg-card/30">
+    <div className="flex-1 rounded-xl overflow-hidden border border-border/60 bg-card/30">
       <div
-        className="grid"
-        style={{ gridTemplateColumns: gridTemplate }}
+        className="grid h-full"
+        style={{ gridTemplateColumns: gridTemplate, gridTemplateRows: gridRows }}
       >
-        {cols.map((c, i) =>
-          c === null ? (
-            <HeaderCell key={`h-c-${i}`} center />
-          ) : (
-            <HeaderCell
-              key={`h-${c.p.id}`}
-              name={c.p.name}
-              score={state.score[c.p.id]}
-              isCurrent={c.p.id === currentId && !winnerId}
-              isWinner={c.p.id === winnerId}
-            />
-          ),
-        )}
-
-        {TARGETS.map((t) => (
-          <Row key={t} target={t} cols={cols} state={state} />
-        ))}
-
-        {cols.map((c, i) =>
-          c === null ? (
-            <div
-              key={`f-c-${i}`}
-              className="bg-muted/40 border-t border-border/40"
-            />
-          ) : (
-            <FooterCell key={`f-${c.p.id}`} stats={state.stats[c.p.id]} />
-          ),
-        )}
-      </div>
-    </div>
-  );
-}
-
-function HeaderCell({
-  name,
-  score,
-  isCurrent,
-  isWinner,
-  center,
-}: {
-  name?: string;
-  score?: number;
-  isCurrent?: boolean;
-  isWinner?: boolean;
-  center?: boolean;
-}) {
-  if (center) {
-    return <div className="bg-muted/40 border-b border-border/40" aria-hidden />;
-  }
-  return (
-    <div
-      className={[
-        "px-2 py-2 text-center border-b border-border/40 relative",
-        isCurrent ? "bg-card" : "bg-card/50",
-      ].join(" ")}
-    >
-      {isCurrent && !isWinner && (
-        <span className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--dart-gold)]" />
-      )}
-      {isWinner && (
-        <span className="absolute left-0 top-0 bottom-0 w-1 bg-[var(--dart-green)]" />
-      )}
-      <div
-        className={[
-          "font-display uppercase text-[0.6rem] tracking-[0.22em] truncate leading-tight",
-          isCurrent ? "text-[var(--dart-gold)]" : "text-muted-foreground",
-        ].join(" ")}
-      >
-        {name}
-      </div>
-      <div
-        className={[
-          "font-display tabular font-black leading-none mt-1",
-          isWinner ? "text-[var(--dart-green)] text-xl" : "text-lg",
-        ].join(" ")}
-      >
-        {score}
-      </div>
-    </div>
-  );
-}
-
-function Row({
-  target,
-  cols,
-  state,
-}: {
-  target: CricketTarget;
-  cols: ({ p: Participant } | null)[];
-  state: ReturnType<typeof deriveState>;
-}) {
-  const allClosed = cols
-    .filter((c): c is { p: Participant } => c !== null)
-    .every((c) => (state.marks[c.p.id]?.[target] ?? 0) >= 3);
-  const isBull = target === "25";
-
-  return (
-    <>
-      {cols.map((c, _i) => {
-        if (c === null) {
+        {/* Header row: [empty] | target labels | "Score" */}
+        <div
+          aria-hidden
+          className="bg-muted/40 border-b border-border/60 border-r border-border/60"
+        />
+        {TARGETS.map((t, i) => {
+          const isBull = t === "25";
+          const closed = allClosedFor(t);
+          const isLastTarget = i === TARGETS.length - 1;
           return (
             <div
-              key={`t-${target}-c`}
+              key={`th-${t}`}
               className={[
-                "grid place-items-center border-b border-border/30 font-display font-black h-11",
+                "grid place-items-center h-11 border-b border-border/60 font-display font-black text-sm relative",
+                isLastTarget ? "" : "border-r border-border/60",
                 isBull
-                  ? "bg-[var(--dart-red)] text-[var(--dart-cream)]"
-                  : allClosed
-                    ? "bg-muted/60 text-muted-foreground line-through"
-                    : "bg-[var(--dart-green)] text-[var(--dart-cream)]",
+                  ? "bg-[var(--dart-red-dim)] text-[var(--dart-cream)]"
+                  : closed
+                    ? "bg-card/40 text-muted-foreground/60"
+                    : "bg-[var(--dart-green-dim)] text-[var(--dart-cream)]",
               ].join(" ")}
             >
-              {targetLabel(target)}
+              {targetLabel(t)}
+              {closed && !isBull && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-2 top-1/2 h-[2px] -translate-y-1/2 bg-muted-foreground/60"
+                />
+              )}
             </div>
           );
-        }
-        const marks = state.marks[c.p.id]?.[target] ?? 0;
+        })}
+        <div
+          aria-hidden
+          className="grid place-items-center bg-muted/40 border-b border-border/60 border-l border-border/60 font-display uppercase text-[0.55rem] tracking-[0.2em] text-muted-foreground"
+        >
+          Score
+        </div>
+
+        {/* Player rows */}
+        {participants.map((p, idx) => {
+          const isCurrent = p.id === currentId && !winnerId;
+          const isWinner = p.id === winnerId;
+          const isLast = idx === participants.length - 1;
+          return (
+            <PlayerRow
+              key={p.id}
+              participant={p}
+              score={state.score[p.id] ?? 0}
+              stats={state.stats[p.id]}
+              marksByTarget={TARGETS.map((t) => state.marks[p.id]?.[t] ?? 0)}
+              isCurrent={isCurrent}
+              isWinner={isWinner}
+              isLast={isLast}
+              visitThrows={isCurrent ? visitThrows : []}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function PlayerRow({
+  participant,
+  score,
+  stats,
+  marksByTarget,
+  isCurrent,
+  isWinner,
+  isLast,
+  visitThrows,
+}: {
+  participant: Participant;
+  score: number;
+  stats: { rounds: number; marks: number; mpr: number };
+  marksByTarget: number[];
+  isCurrent: boolean;
+  isWinner: boolean;
+  isLast: boolean;
+  visitThrows: { value: number; multiplier: Multiplier }[];
+}) {
+  const rowBg = isCurrent
+    ? "bg-[var(--dart-gold)]/[0.11]"
+    : isWinner
+      ? "bg-[var(--dart-green)]/[0.11]"
+      : "bg-card/40";
+  const rowBorder = isLast ? "" : "border-b border-border/50";
+  return (
+    <>
+      <div
+        className={[
+          "relative px-3 py-2 border-r border-border/60 flex flex-col justify-center",
+          rowBg,
+          rowBorder,
+        ].join(" ")}
+      >
+        {isCurrent && !isWinner && (
+          <span className="absolute left-0 top-0 bottom-0 w-1.5 bg-[var(--dart-gold)]" />
+        )}
+        {isWinner && (
+          <span className="absolute left-0 top-0 bottom-0 w-1.5 bg-[var(--dart-green)]" />
+        )}
+        <div
+          className={[
+            "font-display font-black uppercase text-xl sm:text-2xl tracking-tight truncate leading-none",
+            isCurrent
+              ? "text-[var(--dart-gold)]"
+              : isWinner
+                ? "text-[var(--dart-green)]"
+                : "text-foreground/90",
+          ].join(" ")}
+        >
+          {participant.name}
+        </div>
+        <div className="mt-2 text-[0.55rem] uppercase tracking-[0.22em] text-muted-foreground/70 font-display flex flex-col gap-0.5 leading-tight">
+          <span className="flex items-baseline gap-1.5">
+            <span className="tabular font-bold text-foreground/90 w-8 text-right text-xs">
+              {stats.mpr.toFixed(2)}
+            </span>
+            <span>mpr</span>
+          </span>
+          <span className="flex items-baseline gap-1.5">
+            <span className="tabular font-bold text-foreground/90 w-8 text-right text-xs">
+              {stats.rounds}
+            </span>
+            <span>rds</span>
+          </span>
+        </div>
+        {isCurrent && !isWinner && (
+          <div className="mt-2">
+            <VisitThrowSlots throws={visitThrows} />
+          </div>
+        )}
+      </div>
+      {marksByTarget.map((marks, i) => {
+        const isLastTarget = i === marksByTarget.length - 1;
         return (
           <div
-            key={`t-${target}-${c.p.id}`}
-            className="grid place-items-center h-11 border-b border-border/30 bg-card/40"
+            key={`mk-${participant.id}-${TARGETS[i]}`}
+            className={[
+              "grid place-items-center",
+              isLastTarget ? "" : "border-r border-border/50",
+              rowBg,
+              rowBorder,
+            ].join(" ")}
           >
             <MarkGlyph marks={marks} />
           </div>
         );
       })}
+      <div
+        className={[
+          "grid place-items-center border-l border-border/60 font-display tabular font-black leading-none text-4xl sm:text-5xl",
+          isWinner
+            ? "text-[var(--dart-green)]"
+            : isCurrent
+              ? "text-[var(--dart-gold)]"
+              : "text-foreground",
+          rowBg,
+          rowBorder,
+        ].join(" ")}
+      >
+        {score}
+      </div>
     </>
   );
 }
 
+function VisitThrowSlots({ throws }: { throws: { value: number; multiplier: Multiplier }[] }) {
+  const slots = [0, 1, 2];
+  return (
+    <div className="grid grid-cols-3 gap-1">
+      {slots.map((i) => {
+        const t = throws[i];
+        if (!t) {
+          return (
+            <div
+              key={i}
+              aria-hidden
+              className="h-6 rounded-sm border border-dashed border-border/40 bg-background/20 grid place-items-center font-display text-[0.55rem] text-muted-foreground/40 tabular"
+            >
+              {i + 1}
+            </div>
+          );
+        }
+        const prefix =
+          t.value === 0 ? "" : t.multiplier === 2 ? "D" : t.multiplier === 3 ? "T" : "";
+        const label = t.value === 0 ? "—" : t.value === 25 ? "B" : `${prefix}${t.value}`;
+        const color =
+          t.value === 0
+            ? "bg-card/40 border-border/40 text-muted-foreground"
+            : t.multiplier === 2
+              ? "bg-[var(--dart-blue-dim)] border-[var(--dart-blue)]/60 text-[var(--dart-cream)]"
+              : t.multiplier === 3
+                ? "bg-[var(--dart-magenta-dim)] border-[var(--dart-magenta)]/60 text-[var(--dart-cream)]"
+                : "bg-secondary border-border text-foreground";
+        return (
+          <div
+            key={i}
+            className={[
+              "h-6 rounded-sm border grid place-items-center font-display text-[0.65rem] font-black leading-none tabular",
+              color,
+            ].join(" ")}
+          >
+            {label}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function MarkGlyph({ marks }: { marks: number }) {
-  if (marks <= 0) return null;
+  if (marks <= 0) return <EmptyPips />;
   if (marks === 1) return <Slash />;
   if (marks === 2) return <Cross />;
   return <ClosedX />;
 }
 
+function EmptyPips() {
+  return <span aria-hidden className="size-1.5 rounded-full bg-muted-foreground/35" />;
+}
+
 function Slash() {
   return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-label="1 mark">
+    <svg viewBox="0 0 24 24" className="size-7 sm:size-8" aria-label="1 mark">
       <line
         x1="5"
         y1="19"
         x2="19"
         y2="5"
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="3"
         strokeLinecap="round"
       />
     </svg>
@@ -404,35 +480,56 @@ function Slash() {
 
 function Cross() {
   return (
-    <svg viewBox="0 0 24 24" className="size-5" aria-label="2 marks">
-      <line x1="5" y1="19" x2="19" y2="5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-      <line x1="5" y1="5" x2="19" y2="19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+    <svg viewBox="0 0 24 24" className="size-7 sm:size-8" aria-label="2 marks">
+      <line
+        x1="5"
+        y1="19"
+        x2="19"
+        y2="5"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <line
+        x1="5"
+        y1="5"
+        x2="19"
+        y2="19"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
 
 function ClosedX() {
   return (
-    <svg viewBox="0 0 24 24" className="size-5 text-[var(--dart-gold)]" aria-label="closed">
+    <svg
+      viewBox="0 0 24 24"
+      className="size-7 sm:size-8 text-[var(--dart-gold)] drop-shadow-[0_0_6px_oklch(0.82_0.13_85/0.3)]"
+      aria-label="closed"
+    >
       <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" fill="none" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line
+        x1="6"
+        y1="18"
+        x2="18"
+        y2="6"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+      <line
+        x1="6"
+        y1="6"
+        x2="18"
+        y2="18"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
     </svg>
-  );
-}
-
-function FooterCell({ stats }: { stats: { rounds: number; marks: number; mpr: number } }) {
-  return (
-    <div className="px-2 py-1.5 text-[0.55rem] leading-tight text-muted-foreground border-t border-border/40 bg-card/40">
-      <div className="flex items-center gap-1 whitespace-nowrap">
-        <span className="tabular font-semibold text-foreground">{stats.rounds}</span>
-        <span className="uppercase tracking-[0.15em]">rds</span>
-      </div>
-      <div className="flex items-center gap-1 whitespace-nowrap">
-        <span className="uppercase tracking-[0.15em]">mpr</span>
-        <span className="tabular font-semibold text-foreground">{stats.mpr.toFixed(2)}</span>
-      </div>
-    </div>
   );
 }
 
@@ -448,7 +545,12 @@ function MultiplierBar({
   const items: { m: Multiplier; label: string; ring: string; fill: string }[] = [
     { m: 1, label: "Single", ring: "ring-border", fill: "bg-card/70" },
     { m: 2, label: "Double", ring: "ring-[var(--dart-blue)]", fill: "bg-[var(--dart-blue-dim)]" },
-    { m: 3, label: "Triple", ring: "ring-[var(--dart-magenta)]", fill: "bg-[var(--dart-magenta-dim)]" },
+    {
+      m: 3,
+      label: "Triple",
+      ring: "ring-[var(--dart-magenta)]",
+      fill: "bg-[var(--dart-magenta-dim)]",
+    },
   ];
   return (
     <div className="grid grid-cols-3 gap-1.5">
@@ -564,9 +666,7 @@ function FinishedPanel({ winner }: { winner: string }) {
       <div className="font-display text-[0.65rem] tracking-[0.4em] uppercase text-muted-foreground">
         Leg won by
       </div>
-      <div className="font-display font-black text-4xl text-[var(--dart-green)]">
-        {winner}
-      </div>
+      <div className="font-display font-black text-4xl text-[var(--dart-green)]">{winner}</div>
       <Link
         to="/"
         className="mt-2 inline-flex items-center justify-center h-11 px-6 rounded-lg bg-[var(--dart-gold)] text-[var(--field)] font-display text-xs uppercase tracking-[0.3em] font-extrabold"
@@ -588,17 +688,6 @@ type ActiveVisit = {
   lastEventId: string;
 };
 
-function splitLayout(participants: Participant[]) {
-  if (participants.length === 2) {
-    return { left: [participants[0]], right: [participants[1]] };
-  }
-  const mid = Math.ceil(participants.length / 2);
-  return {
-    left: participants.slice(0, mid),
-    right: participants.slice(mid),
-  };
-}
-
 function isCricketTarget(v: number): v is 15 | 16 | 17 | 18 | 19 | 20 | 25 {
   return v === 15 || v === 16 || v === 17 || v === 18 || v === 19 || v === 20 || v === 25;
 }
@@ -608,11 +697,7 @@ function targetKey(v: number): CricketTarget | null {
   return String(v) as CricketTarget;
 }
 
-function deriveState(
-  config: CricketConfig,
-  participants: Participant[],
-  events: GameEvent[],
-) {
+function deriveState(config: CricketConfig, participants: Participant[], events: GameEvent[]) {
   const marks: Record<string, MarksByTarget> = {};
   const score: Record<string, number> = {};
   const dartsThrown: Record<string, number> = {};
@@ -705,9 +790,7 @@ function applyHit(
 
   if (excess > 0) {
     const opponents = participants.filter((p) => p.id !== pid);
-    const openOpponents = opponents.filter(
-      (p) => (marks[p.id]?.[t] ?? 0) < 3,
-    );
+    const openOpponents = opponents.filter((p) => (marks[p.id]?.[t] ?? 0) < 3);
     if (config.scoringMode === "cutthroat") {
       if (openOpponents.length > 0) {
         const pts = excess * targetValue(t);
@@ -730,8 +813,7 @@ function detectWinner(
   score: Record<string, number>,
   scoringMode: "normal" | "cutthroat",
 ): Participant | null {
-  const allClosed = (pid: string) =>
-    TARGETS.every((t) => (marks[pid]?.[t] ?? 0) >= 3);
+  const allClosed = (pid: string) => TARGETS.every((t) => (marks[pid]?.[t] ?? 0) >= 3);
   const closers = participants.filter((p) => allClosed(p.id));
   if (closers.length === 0) return null;
   const scores = participants.map((p) => score[p.id]);

@@ -1,16 +1,10 @@
-
 import { useMemo, useState, useTransition } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { Undo2, CheckCircle2, Home } from "lucide-react";
 import type { Game, GameEvent } from "@/lib/db";
 import type { X01Config, X01OutMode } from "@/lib/games-shared";
-import {
-  finishGame,
-  recordThrow,
-  endVisitEarly,
-  undoLastThrow,
-} from "@/lib/game-actions";
+import { finishGame, recordThrow, endVisitEarly, undoLastThrow } from "@/lib/game-actions";
 
 type Participant = { id: string; playerId: string; position: number; name: string };
 type Multiplier = 1 | 2 | 3;
@@ -65,8 +59,7 @@ function judgeVisit(
   let bust = false;
   if (after < 0) bust = true;
   else if (after === 0 && outMode === "double" && !endedOnDouble) bust = true;
-  else if (after === 0 && outMode === "master" && !endedOnDouble && !endedOnTriple)
-    bust = true;
+  else if (after === 0 && outMode === "master" && !endedOnDouble && !endedOnTriple) bust = true;
   else if (after === 1 && (outMode === "double" || outMode === "master")) bust = true;
   return { bust, score: bust ? 0 : gross };
 }
@@ -100,8 +93,7 @@ export function X01Board({
   const hypotheticalRemaining = currentRemaining - visitScore;
   const wouldBust =
     hypotheticalRemaining < 0 ||
-    ((config.outMode === "double" || config.outMode === "master") &&
-      hypotheticalRemaining === 1);
+    ((config.outMode === "double" || config.outMode === "master") && hypotheticalRemaining === 1);
 
   function nextRoundIndexFor(participantId: string) {
     if (activeVisit && activeVisit.participantId === participantId) {
@@ -124,11 +116,7 @@ export function X01Board({
     const roundIndex = nextRoundIndexFor(currentParticipant.id);
 
     const projected = [...visitThrows, newThrow];
-    const { bust, score: visitTotal } = judgeVisit(
-      projected,
-      currentRemaining,
-      config.outMode,
-    );
+    const { bust, score: visitTotal } = judgeVisit(projected, currentRemaining, config.outMode);
     const wouldWin = !bust && currentRemaining - visitTotal === 0;
     const shouldEnd = throwIndex === 2 || bust || wouldWin;
 
@@ -149,11 +137,11 @@ export function X01Board({
         return;
       }
       if (wouldWin) {
-        const stats = computeFinalStats(
-          participants,
-          events,
-          { pid: currentParticipant.id, roundIndex, throw: newThrow },
-        );
+        const stats = computeFinalStats(participants, events, {
+          pid: currentParticipant.id,
+          roundIndex,
+          throw: newThrow,
+        });
         await finishGame({
           gameId: game.id,
           winnerParticipantId: currentParticipant.id,
@@ -165,7 +153,6 @@ export function X01Board({
         toast.error("Bust", { position: "top-center", duration: 1800 });
         haptic(30);
       }
-
     });
   }
 
@@ -179,7 +166,6 @@ export function X01Board({
         eventId: activeVisit.lastEventId,
       });
       if (res?.error) toast.error(res.error);
-
     });
   }
 
@@ -189,12 +175,11 @@ export function X01Board({
     start(async () => {
       const res = await undoLastThrow(game.id);
       if (res?.error) toast.error(res.error);
-
     });
   }
 
   return (
-    <div className="h-full flex flex-col field-grid overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="flex items-center justify-between px-3 pt-2 pb-1 shrink-0">
         <Link
           to="/"
@@ -285,8 +270,7 @@ function PlayerStack({
         const isCurrent = p.id === currentId && !winnerId;
         const isWinner = p.id === winnerId;
         const remaining = state.remaining[p.id];
-        const projected =
-          isCurrent && !wouldBust ? remaining - visitScore : remaining;
+        const projected = isCurrent && !wouldBust ? remaining - visitScore : remaining;
         return (
           <PlayerRow
             key={p.id}
@@ -335,13 +319,13 @@ function PlayerRow({
   return (
     <div
       className={[
-        "relative rounded-xl border px-3 py-1.5 grid items-center gap-2 transition-all",
+        "relative rounded-xl border-2 px-3 py-1.5 grid items-center gap-2 transition-all",
         "grid-cols-[minmax(4.5rem,auto)_1fr_auto]",
         isCurrent
-          ? "bg-card border-transparent shadow-[0_0_0_2px_var(--dart-gold)]"
+          ? "bg-card border-[var(--dart-gold)]"
           : isWinner
-            ? "bg-card border-transparent shadow-[0_0_0_2px_var(--dart-green)]"
-            : "bg-card/50 border-border/60",
+            ? "bg-card border-[var(--dart-green)]"
+            : "bg-card/50 border-border/50",
       ].join(" ")}
     >
       <div className="flex flex-col min-w-0">
@@ -349,11 +333,7 @@ function PlayerRow({
           className={[
             "font-display tabular font-black leading-none",
             isCurrent ? "text-[2rem]" : "text-xl",
-            wouldBust
-              ? "text-[var(--dart-red)]"
-              : isWinner
-                ? "text-[var(--dart-green)]"
-                : "",
+            wouldBust ? "text-[var(--dart-red)]" : isWinner ? "text-[var(--dart-green)]" : "",
           ].join(" ")}
         >
           {projected}
@@ -389,10 +369,7 @@ function PlayerRow({
               <span className="text-foreground tabular font-semibold">{rounds}</span> rds
             </span>
             <span>
-              avg{" "}
-              <span className="text-foreground tabular font-semibold">
-                {avg.toFixed(1)}
-              </span>
+              avg <span className="text-foreground tabular font-semibold">{avg.toFixed(1)}</span>
             </span>
           </>
         )}
@@ -423,10 +400,10 @@ function ThrowSlots({
           return (
             <div
               key={i}
-              className={`${h} rounded-md border border-dashed border-border/60 grid place-items-center text-muted-foreground/50 font-display text-xs`}
+              className={`${h} rounded-md border border-dashed border-border/50 bg-background/20 grid place-items-center text-muted-foreground/40 font-display text-[0.6rem] tracking-widest tabular`}
               aria-hidden
             >
-              ·
+              {i + 1}
             </div>
           );
         }
@@ -443,7 +420,9 @@ function ThrowSlots({
             className={`${h} rounded-md border ${color} font-display ${valueSize} font-black leading-none flex flex-col items-center justify-center`}
           >
             <span className="leading-none">{throwLabel(t)}</span>
-            <span className={`${scoreSize} font-sans font-medium opacity-70 tracking-widest mt-0.5`}>
+            <span
+              className={`${scoreSize} font-sans font-medium opacity-70 tracking-widest mt-0.5`}
+            >
               {throwScore(t)}
             </span>
           </div>
@@ -465,7 +444,12 @@ function MultiplierBar({
   const items: { m: Multiplier; label: string; ring: string; fill: string }[] = [
     { m: 1, label: "Single", ring: "ring-border", fill: "bg-card/70" },
     { m: 2, label: "Double", ring: "ring-[var(--dart-blue)]", fill: "bg-[var(--dart-blue-dim)]" },
-    { m: 3, label: "Triple", ring: "ring-[var(--dart-magenta)]", fill: "bg-[var(--dart-magenta-dim)]" },
+    {
+      m: 3,
+      label: "Triple",
+      ring: "ring-[var(--dart-magenta)]",
+      fill: "bg-[var(--dart-magenta-dim)]",
+    },
   ];
   return (
     <div className="grid grid-cols-3 gap-1.5">
@@ -595,9 +579,7 @@ function FinishedPanel({ winner }: { winner: string }) {
       <div className="font-display text-[0.65rem] tracking-[0.4em] uppercase text-muted-foreground">
         Leg won by
       </div>
-      <div className="font-display font-black text-4xl text-[var(--dart-green)]">
-        {winner}
-      </div>
+      <div className="font-display font-black text-4xl text-[var(--dart-green)]">{winner}</div>
       <Link
         to="/"
         className="mt-2 inline-flex items-center justify-center h-11 px-6 rounded-lg bg-[var(--dart-gold)] text-[var(--field)] font-display text-xs uppercase tracking-[0.3em] font-extrabold"
@@ -610,18 +592,19 @@ function FinishedPanel({ winner }: { winner: string }) {
 
 /* ─── State derivation ───────────────────────────────────────────────── */
 
-type PerThrowData = { value: number; multiplier: Multiplier; throwIndex: number; endsVisit?: boolean };
+type PerThrowData = {
+  value: number;
+  multiplier: Multiplier;
+  throwIndex: number;
+  endsVisit?: boolean;
+};
 type LegacyVisitData = { throws: Throw[]; score: number; bust: boolean };
 
 function isLegacy(d: unknown): d is LegacyVisitData {
   return !!d && typeof d === "object" && Array.isArray((d as LegacyVisitData).throws);
 }
 
-function deriveState(
-  config: X01Config,
-  participants: Participant[],
-  events: GameEvent[],
-) {
+function deriveState(config: X01Config, participants: Participant[], events: GameEvent[]) {
   const remaining: Record<string, number> = {};
   const visits: Record<string, number> = {};
   const totalScored: Record<string, number> = {};

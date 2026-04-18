@@ -13,10 +13,7 @@ export default function GameDetailPage() {
     if (!id) return null;
     const g = await db.games.get(id);
     if (!g) return { notFound: true as const };
-    const parts = await db.participants
-      .where("gameId")
-      .equals(id)
-      .sortBy("position");
+    const parts = await db.participants.where("gameId").equals(id).sortBy("position");
     const playerIds = parts.map((p) => p.playerId);
     const players = await db.players.where("id").anyOf(playerIds).toArray();
     const playerName = new Map(players.map((p) => [p.id, p.name]));
@@ -27,10 +24,7 @@ export default function GameDetailPage() {
       finalStats: p.finalStats,
       name: playerName.get(p.playerId) ?? "?",
     }));
-    const events = await db.events
-      .where("gameId")
-      .equals(id)
-      .sortBy("createdAt");
+    const events = await db.events.where("gameId").equals(id).sortBy("createdAt");
     events.sort((a, b) => {
       const t = a.roundIndex - b.roundIndex;
       if (t !== 0) return t;

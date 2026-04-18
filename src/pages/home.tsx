@@ -45,12 +45,18 @@ export default function HomePage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         {MODES.map((m) => {
+          const accentVar =
+            m.accent === "gold"
+              ? "var(--dart-gold)"
+              : m.accent === "green"
+                ? "var(--dart-green)"
+                : "var(--dart-red)";
           const tint =
             m.accent === "gold"
-              ? "hover:shadow-[0_0_0_2px_var(--dart-gold)]"
+              ? "hover:shadow-[0_0_0_2px_var(--dart-gold),0_24px_48px_-24px_oklch(0.82_0.13_85/0.5)]"
               : m.accent === "green"
-                ? "hover:shadow-[0_0_0_2px_var(--dart-green)]"
-                : "hover:shadow-[0_0_0_2px_var(--dart-red)]";
+                ? "hover:shadow-[0_0_0_2px_var(--dart-green),0_24px_48px_-24px_oklch(0.6_0.15_155/0.5)]"
+                : "hover:shadow-[0_0_0_2px_var(--dart-red),0_24px_48px_-24px_oklch(0.62_0.22_25/0.5)]";
           const iconColor =
             m.accent === "gold"
               ? "text-[var(--dart-gold)]"
@@ -59,14 +65,19 @@ export default function HomePage() {
                 : "text-[var(--dart-red)]";
           const content = (
             <div
-              className={`group relative rounded-2xl border border-border bg-card/60 p-5 min-h-[11rem] flex flex-col justify-between transition-all ${
-                m.live ? tint + " hover:-translate-y-0.5" : "opacity-70"
+              className={`group relative overflow-hidden rounded-2xl border border-border bg-card/60 p-5 min-h-[11rem] flex flex-col justify-between transition-all duration-300 ${
+                m.live ? tint + " hover:-translate-y-0.5 active:translate-y-0" : "opacity-70"
               }`}
             >
-              <div className="flex items-start justify-between">
-                <m.Icon className={`size-6 ${iconColor}`} />
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -top-16 -right-16 size-40 rounded-full blur-2xl opacity-30 group-hover:opacity-60 transition-opacity"
+                style={{ background: `radial-gradient(circle, ${accentVar}, transparent 70%)` }}
+              />
+              <div className="relative flex items-start justify-between">
+                <m.Icon className={`size-6 ${iconColor}`} strokeWidth={2.25} />
               </div>
-              <div>
+              <div className="relative">
                 <div className="font-display font-black text-3xl uppercase tracking-tight leading-none">
                   {m.title}
                 </div>

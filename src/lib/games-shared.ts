@@ -1,8 +1,6 @@
 export type GameMode = "x01" | "cricket" | "killer";
 
-export const X01_START_SCORES = [
-  101, 201, 301, 401, 501, 601, 701, 801, 901, 1001,
-] as const;
+export const X01_START_SCORES = [101, 201, 301, 401, 501, 601, 701, 801, 901, 1001] as const;
 export type X01StartScore = (typeof X01_START_SCORES)[number];
 
 export type X01OutMode = "single" | "double" | "master";
