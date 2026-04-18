@@ -29,5 +29,5 @@ jobs:
         with:
           node-version: "22"
           cache: true
-      - run: corepack enable
-      - run: pnpm build
+      - run: npx tsc -b
+      - run: vp build

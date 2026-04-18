@@ -23,8 +23,8 @@ jobs:
         with:
           node-version: "22"
           cache: true
-      - run: corepack enable
-      - run: pnpm build
+      - run: npx tsc -b
+      - run: vp build
         env:
           VITE_BASE_PATH: /${{ github.event.repository.name }}/
       - name: Copy 404 for SPA fallback
