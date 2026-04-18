@@ -29,4 +29,5 @@ jobs:
         with:
           node-version: "22"
           cache: true
+      - run: corepack enable
       - run: pnpm build
