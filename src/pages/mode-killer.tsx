@@ -1,16 +1,10 @@
-
 import { useMemo, useState, useTransition } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { Undo2, CheckCircle2, Home, Skull, Heart } from "lucide-react";
 import type { Game, GameEvent } from "@/lib/db";
 import type { KillerConfig } from "@/lib/games-shared";
-import {
-  finishGame,
-  recordThrow,
-  endVisitEarly,
-  undoLastThrow,
-} from "@/lib/game-actions";
+import { finishGame, recordThrow, endVisitEarly, undoLastThrow } from "@/lib/game-actions";
 
 type Participant = { id: string; playerId: string; position: number; name: string };
 type Multiplier = 1 | 2 | 3;
@@ -155,7 +149,6 @@ export function KillerBoard({
         toast.success(`${winner?.name ?? "Player"} wins!`);
         haptic(60);
       }
-
     });
   }
 
@@ -169,7 +162,6 @@ export function KillerBoard({
         eventId: activeVisit.lastEventId,
       });
       if (res?.error) toast.error(res.error);
-
     });
   }
 
@@ -179,12 +171,11 @@ export function KillerBoard({
     start(async () => {
       const res = await undoLastThrow(game.id);
       if (res?.error) toast.error(res.error);
-
     });
   }
 
   return (
-    <div className="h-full flex flex-col field-grid overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
       <div className="flex items-center justify-between px-3 pt-2 pb-1 shrink-0">
         <Link
           to="/"
@@ -288,15 +279,15 @@ function KillerRow({
   return (
     <div
       className={[
-        "relative rounded-xl border px-3 py-2 grid items-center gap-2 transition-all",
+        "relative rounded-xl border-2 px-3 py-2 grid items-center gap-2 transition-all",
         "grid-cols-[auto_1fr_auto]",
         dead
-          ? "bg-card/30 border-border/40 opacity-50"
+          ? "bg-card/30 border-border/30 opacity-50"
           : isCurrent
-            ? "bg-card border-transparent shadow-[0_0_0_2px_var(--dart-gold)]"
+            ? "bg-card border-[var(--dart-gold)]"
             : isWinner
-              ? "bg-card border-transparent shadow-[0_0_0_2px_var(--dart-green)]"
-              : "bg-card/50 border-border/60",
+              ? "bg-card border-[var(--dart-green)]"
+              : "bg-card/50 border-border/50",
       ].join(" ")}
     >
       <div className="flex items-center gap-2">
@@ -399,10 +390,10 @@ function ThrowSlots({ throws }: { throws: { value: number; multiplier: Multiplie
           return (
             <div
               key={i}
-              className="h-7 w-10 rounded-md border border-dashed border-border/60 grid place-items-center text-muted-foreground/50 font-display text-[0.6rem]"
+              className="h-7 w-10 rounded-md border border-dashed border-border/50 bg-background/20 grid place-items-center text-muted-foreground/40 font-display text-[0.6rem] tabular"
               aria-hidden
             >
-              ·
+              {i + 1}
             </div>
           );
         }
@@ -445,7 +436,12 @@ function MultiplierBar({
   const items: { m: Multiplier; label: string; ring: string; fill: string }[] = [
     { m: 1, label: "Single", ring: "ring-border", fill: "bg-card/70" },
     { m: 2, label: "Double", ring: "ring-[var(--dart-blue)]", fill: "bg-[var(--dart-blue-dim)]" },
-    { m: 3, label: "Triple", ring: "ring-[var(--dart-magenta)]", fill: "bg-[var(--dart-magenta-dim)]" },
+    {
+      m: 3,
+      label: "Triple",
+      ring: "ring-[var(--dart-magenta)]",
+      fill: "bg-[var(--dart-magenta-dim)]",
+    },
   ];
   return (
     <div className="grid grid-cols-3 gap-1.5">
@@ -556,9 +552,7 @@ function FinishedPanel({ winner }: { winner: string }) {
       <div className="font-display text-[0.65rem] tracking-[0.4em] uppercase text-muted-foreground">
         Last killer standing
       </div>
-      <div className="font-display font-black text-4xl text-[var(--dart-green)]">
-        {winner}
-      </div>
+      <div className="font-display font-black text-4xl text-[var(--dart-green)]">{winner}</div>
       <Link
         to="/"
         className="mt-2 inline-flex items-center justify-center h-11 px-6 rounded-lg bg-[var(--dart-gold)] text-[var(--field)] font-display text-xs uppercase tracking-[0.3em] font-extrabold"
@@ -781,8 +775,7 @@ function applyThrow(
   }
 
   const survivors = participants.filter((p) => !isDead(lives[p.id], config));
-  const winnerId =
-    participants.length > 1 && survivors.length === 1 ? survivors[0].id : null;
+  const winnerId = participants.length > 1 && survivors.length === 1 ? survivors[0].id : null;
 
   return { becameKiller, killedPid, lifeLost, winnerId };
 }

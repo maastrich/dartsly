@@ -99,8 +99,8 @@ export function InstallPrompt() {
               n={1}
               body={
                 <>
-                  Open this page in <strong className="text-foreground">Safari</strong>.
-                  Other iOS browsers can&apos;t install PWAs.
+                  Open this page in <strong className="text-foreground">Safari</strong>. Other iOS
+                  browsers can&apos;t install PWAs.
                 </>
               }
             />

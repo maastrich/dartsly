@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig } from "vite-plus";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
@@ -7,6 +7,15 @@ import path from "node:path";
 const BASE = process.env.VITE_BASE_PATH ?? "/";
 
 export default defineConfig({
+  staged: {
+    "*": "vp check --fix",
+  },
+  lint: {
+    ignorePatterns: ["dist/**", "dev-dist/**", "public/**"],
+  },
+  fmt: {
+    ignorePatterns: ["dist/**", "dev-dist/**", "public/**"],
+  },
   base: BASE,
   plugins: [
     react(),
@@ -51,7 +60,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
 });

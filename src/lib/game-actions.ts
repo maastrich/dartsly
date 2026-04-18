@@ -88,9 +88,7 @@ export async function endVisitEarly(input: {
   return { ok: true };
 }
 
-export async function undoLastThrow(
-  gameId: string,
-): Promise<{ ok?: true; error?: string }> {
+export async function undoLastThrow(gameId: string): Promise<{ ok?: true; error?: string }> {
   const g = await db.games.get(gameId);
   if (!g) return { error: "Game not found" };
   if (g.status !== "in_progress") return { error: "Game is not active" };
@@ -121,9 +119,7 @@ export async function finishGame(input: {
   return { ok: true };
 }
 
-export async function abandonGame(
-  gameId: string,
-): Promise<{ ok?: true; error?: string }> {
+export async function abandonGame(gameId: string): Promise<{ ok?: true; error?: string }> {
   const g = await db.games.get(gameId);
   if (!g) return { error: "Game not found" };
   await db.games.update(gameId, { status: "abandoned", finishedAt: Date.now() });

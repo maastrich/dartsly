@@ -32,3 +32,6 @@ pnpm-debug.log*
 /.agents/
 /.claude/
 /skills-lock.json
+
+# vite-plus local hooks
+/.vite-hooks/
