@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024"><defs><radialGradient id="bg" cx="50%" cy="44%" r="78%">
+      <stop offset="0%"  stop-color="#0c110d"/>
+      <stop offset="55%" stop-color="#040605"/>
+      <stop offset="100%" stop-color="#000101"/>
+    </radialGradient><linearGradient id="dGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="#f3ead9"/>
+      <stop offset="100%" stop-color="#aaa498"/>
+    </linearGradient><radialGradient id="bull" cx="38%" cy="32%" r="75%">
+      <stop offset="0%"  stop-color="#ffdd6e"/>
+      <stop offset="55%" stop-color="#ebbd57"/>
+      <stop offset="100%" stop-color="#68521e"/>
+    </radialGradient><filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter><radialGradient id="vg" cx="50%" cy="50%" r="72%">
+      <stop offset="65%" stop-color="#000" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0.5"/>
+    </radialGradient></defs><rect width="1024" height="1024" fill="url(#bg)"/><path d="M252.0,152.0 H412.0 A360.0,360.0 0 0 1 412.0,872.0 H252.0 Z M384.0,284.0 H412.0 A228.0,228.0 0 0 1 412.0,740.0 H384.0 Z" fill="url(#dGrad)" fill-rule="evenodd"/><g filter="url(#glow)"><circle cx="512.0" cy="512.0" r="81.19999999999999" fill="url(#bull)"/></g><rect width="1024" height="1024" fill="url(#vg)"/></svg>
